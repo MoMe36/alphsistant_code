@@ -1,18 +1,28 @@
 import bpy
 import numpy as np 
+import pickle 
+import os 
 
+path = "Bureau/Modis/AlphSistant_code/facemesh_tests"
 
 def make_topology(): 
     
-    vert_data = np.loadtxt("Bureau/Modis/AlphSistant_code/facemesh_tests/face_0.txt")
-    edge_data = np.loadtxt("Bureau/Modis/AlphSistant_code/facemesh_tests/edges_t_0.txt").astype(int).tolist()
-    faces = []
-
+    verts = np.loadtxt(os.path.join(path, "face_0.txt"))
+    #edge_data = np.loadtxt(os.path.join(path, "edges.txt")).astype(int).tolist()
+    with open(os.path.join(path, 'edges.txt'), 'rb') as f: 
+        edges =pickle.load(f) 
+    
+    with open(os.path.join(path, 'polygons.txt'), 'rb') as f: 
+        faces = pickle.load(f) 
+    #faces = [[400,369,378,395]] 
+    #faces = [[369,400,378,395]] 
+    #faces = [[395,369,400,378]] 
     face_mesh = bpy.data.meshes.new('face')
-    face_mesh.from_pydata(vert_data, edge_data, faces)
+    face_mesh.from_pydata(verts, edges, faces)
     face_mesh.update()
     ob = bpy.data.objects.new('face', face_mesh)
     bpy.context.scene.collection.objects.link(ob)
+    
         
     
 
@@ -36,7 +46,9 @@ class ModalFaceOperator(bpy.types.Operator):
             try: 
                 target = np.loadtxt("Bureau/Modis/AlphSistant_code/facemesh_tests/face_0.txt")
                 for i, (vs, vt) in enumerate(zip(ob.data.vertices, target)): 
-                    vs.co = vt
+                    vs.co.x = vt[0] - 0.406
+                    vs.co.y = vt[2]
+                    vs.co.z = -vt[1] + 0.35
             except: 
                 print('Abort') 
                 pass 
@@ -65,6 +77,7 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-
+    
+    #make_topology()
     # test call
-    bpy.ops.mehdi.modal_timer_operator()
+    #bpy.ops.mehdi.modal_timer_operator()
